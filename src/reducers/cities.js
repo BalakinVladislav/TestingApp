@@ -59,3 +59,7 @@ export default function cities(state =
 		return state;
 	}
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 790ac68a9b4235f8c4aafc2237b1053ae930c51b
