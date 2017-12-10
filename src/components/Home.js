@@ -5,7 +5,8 @@ import {
 	addCity,
 	removeCity,
 	changeCity,
-	addInputHelper
+	addInputHelper,
+	restoreFromWebSql
 } from '../actions';
 
 class Home extends React.Component {
@@ -23,15 +24,41 @@ class Home extends React.Component {
    		this.handleAddCityChange = this.handleAddCityChange.bind(this);
 	}
 
+	componentWillMount() {
+		const {
+			restoreFromWebSql
+		} = this.props
 
-    handleCityChange(e) {
+		var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
+		let startingData = [];
+		db.transaction(function (tx) {
+			tx.executeSql('CREATE TABLE IF NOT EXISTS LOGS (id integer primary key autoincrement, log)');
+			tx.executeSql('SELECT * FROM LOGS', [], function (tx, result) {
+				for (var i = 0; i < result.rows.length; i++) {
+					let el = {
+						id: result.rows.item(i).id,
+						city: result.rows.item(i).log
+					};
+					startingData.push(el);
+				}
+				restoreFromWebSql(startingData);
+
+			})
+		}, null);
+
+	}
+
+
+    handleCityChange(id, city) {
     	const {
     		changeCity
     	} = this.props;
+    	var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
+		db.transaction(function (tx) {
+    		tx.executeSql('UPDATE LOGS SET log=? WHERE id=?', [city, id]);
+		});
 
-    	const prevCity = e.target.dataset.city;
-    	const newCity = e.target.value;
-    	changeCity(prevCity, newCity);
+    	changeCity(id, city);
     }
 
     handleAddCityChange(e) {
@@ -43,22 +70,37 @@ class Home extends React.Component {
     	addInputHelper(newCity);
     }
 
-    deleteCity(e) {
+    deleteCity(id) {
     	const {
     		removeCity
     	} = this.props;
 
-    	const cityName = e.target.dataset.city;
-    	removeCity(cityName);
+    	var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
+		db.transaction(function (tx) {
+    		tx.executeSql('DELETE FROM LOGS  WHERE id=?', [id]);
+		});
+
+    	removeCity(id);
     }
 
     addCity(e) {
   		const {
 				addCity,
+				cities
 			} = this.props;
 
-		let city = e.target.dataset.city;
-		addCity(city);
+		let city = cities.addCity;
+
+		var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
+		db.transaction(function (tx) {
+   			tx.executeSql('CREATE TABLE IF NOT EXISTS LOGS (id integer primary key autoincrement, log)');
+   			tx.executeSql('INSERT INTO LOGS (log) VALUES (?)', [city]);
+   			tx.executeSql('SELECT * FROM LOGS', [], function (tx, result) {
+				let index = result.rows.length;
+				let id = result.rows.item(index-1).id;
+				addCity(city, id);
+			})
+   		}, null);
 
 	}
 
@@ -69,13 +111,13 @@ class Home extends React.Component {
         return (
         	<div> {cities.data.map((city, id) => (
         		<div key={id}>
-            		{city}
-            		<button onClick={this.deleteCity} data-city={city}>Удалить город</button>
-            		<input type="text" data-city={city} value={city} onChange={this.handleCityChange}></input>
+            		{city.city}
+            		<button onClick={() => this.deleteCity(city.id)} data-city={city.city}>Удалить город</button>
+            		<input type="text" value={city.city} onChange={(e) => this.handleCityChange(city.id,e.target.value)}></input>
             	</div>)
             	)}
           		<input type="text" value={addCity} onChange={this.handleAddCityChange}></input>
-          		<button data-city={addCity} onClick={this.addCity}>Добавить город</button>
+          		<button onClick={this.addCity}>Добавить город</button>
           </div>)
 	}
 }
@@ -91,7 +133,8 @@ function mapDispatchToProps(dispatch) {
 		addCity,
 		removeCity,
 		changeCity,
-		addInputHelper
+		addInputHelper,
+		restoreFromWebSql
 	}, dispatch);
 }
 

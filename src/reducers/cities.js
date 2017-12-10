@@ -1,37 +1,61 @@
-export default function cities(state = {
-	data: ["Ekaterinburg", "Moscow", "Saint-Petersburg", "Kazan"],
-	addCity: ''
-    }, action) {
+export default function cities(state = 
+	{
+		data: [],
+		addCity: ''
+    	}, action) {
 	switch (action.type) {
 		case 'ADD_CITY':
+		const cityToAdd = {
+			id: action.id,
+			city: action.city
+		};
 
-		return {data: [...state.data, action.city],
-			addCity: ''}
+		return {
+				data: [...state.data, cityToAdd],
+				addCity: ''
+				}
 
 		case 'DELETE_CITY':
 
-		return {data: [...state.data].filter(city1 => !(city1 === action.city)),
-			addCity: ''}
+		return {
+				data: [...state.data].filter(city1 => !(city1.id === action.id)),
+				addCity: ''
+				}
 
 		case 'CHANGE_CITY':
-		console.log(action.prevCity);
-		let copyingState = Object.assign({}, this.state);
-		let index = copyingState.data.indexOf(action.prevCity);
-		let newState = copyingState.data.splice(index, 1, action.newCity);
+			function finder(element, index, array) {
+	          	if (element.id === action.id) {
+	            return true;
+	          	}
+	        }
+			let copyingState = JSON.parse(JSON.stringify(state));
+			let index = copyingState.data.findIndex(finder);
+			let newData = copyingState.data;
+			let newState = newData.splice(index, 1, {
+				id: action.id,
+				city: action.city
+			});
 
-		return copyingState
+		return {
+			data: [...newData],
+			addCity: state.addCity
+		}
 
 		case 'ADD_INPUT_HELPER':
-		console.log(action.newCity);
 
 		return {
 			data: [...state.data],
 			addCity: action.newCity
 		}
 
+		case 'CITIES_RESTORE_FROM_WEB_SQL':
+
+		return {
+			data: [...state.data, ...action.startingData],
+			addCity: ''
+		}
+
 		default:
 		return state;
 	}
 }
-
-h16bit

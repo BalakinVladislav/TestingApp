@@ -1,22 +1,23 @@
-export const addCity = (city) => {
+export const addCity = (city, id) => {
 	return {
 		type: 'ADD_CITY',
-		city
+		city,
+		id
 	}
 }
 
-export const removeCity = (city) => {
+export const removeCity = (id) => {
 	return {
 		type: 'DELETE_CITY',
-		city
+		id
 	}
 }
 
-export const changeCity = (prevCity, newCity) => {
+export const changeCity = (id, city) => {
 	return {
 		type: 'CHANGE_CITY',
-		prevCity,
-		newCity
+		id,
+		city
 	}
 }
 
@@ -24,5 +25,12 @@ export const addInputHelper = (newCity) => {
 	return {
 		type: 'ADD_INPUT_HELPER',
 		newCity
+	}
+}
+
+export const restoreFromWebSql = (startingData) => {
+	return {
+		type: 'CITIES_RESTORE_FROM_WEB_SQL',
+		startingData
 	}
 }
