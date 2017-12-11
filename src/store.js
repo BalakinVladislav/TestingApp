@@ -4,6 +4,7 @@ import { syncHistoryWithStore, routerMiddleware } from "react-router-redux";
 import createSagaMiddleware from "redux-saga";
 import freeze from "redux-freeze";
 import { reducers } from "./reducers/index";
+import thunk from 'redux-thunk';
 
 // add the middlewares
 let middlewares = [];
@@ -29,7 +30,7 @@ if (process.env.NODE_ENV !== 'production' && window.devToolsExtension) {
 }
 
 // create the store
-const store = createStore(reducers, middleware);
+const store = createStore(reducers, middleware, applyMiddleware(thunk));
 const history = syncHistoryWithStore(browserHistory, store);
 
 // export

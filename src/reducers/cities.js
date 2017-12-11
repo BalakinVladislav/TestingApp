@@ -5,10 +5,10 @@ export default function cities(state =
     	}, action) {
 	switch (action.type) {
 		case 'ADD_CITY':
-		const cityToAdd = {
-			id: action.id,
-			city: action.city
-		};
+			const cityToAdd = {
+				id: action.id,
+				city: action.city
+			};
 
 		return {
 				data: [...state.data, cityToAdd],

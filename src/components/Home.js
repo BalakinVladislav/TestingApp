@@ -1,8 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from 'redux';
+import { Pagination } from 'react-bootstrap';
 import {
-	addCity,
+	asyncAddCity,
 	removeCity,
 	changeCity,
 	addInputHelper,
@@ -15,13 +16,15 @@ class Home extends React.Component {
 
 		this.state = {
 			data: [],
-			addCity: ''
+			addCity: '',
+			currentPage: 1
 		};
 
 		this.deleteCity = this.deleteCity.bind(this);
-    	this.addCity = this.addCity.bind(this);
+    	this.asyncAddCity = this.asyncAddCity.bind(this);
     	this.handleCityChange = this.handleCityChange.bind(this);
    		this.handleAddCityChange = this.handleAddCityChange.bind(this);
+   		this.handleClick = this.handleClick.bind(this);
 	}
 
 	componentWillMount() {
@@ -29,22 +32,7 @@ class Home extends React.Component {
 			restoreFromWebSql
 		} = this.props
 
-		var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
-		let startingData = [];
-		db.transaction(function (tx) {
-			tx.executeSql('CREATE TABLE IF NOT EXISTS LOGS (id integer primary key autoincrement, log)');
-			tx.executeSql('SELECT * FROM LOGS', [], function (tx, result) {
-				for (var i = 0; i < result.rows.length; i++) {
-					let el = {
-						id: result.rows.item(i).id,
-						city: result.rows.item(i).log
-					};
-					startingData.push(el);
-				}
-				restoreFromWebSql(startingData);
-
-			})
-		}, null);
+		restoreFromWebSql();
 
 	}
 
@@ -53,10 +41,6 @@ class Home extends React.Component {
     	const {
     		changeCity
     	} = this.props;
-    	var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
-		db.transaction(function (tx) {
-    		tx.executeSql('UPDATE LOGS SET log=? WHERE id=?', [city, id]);
-		});
 
     	changeCity(id, city);
     }
@@ -75,49 +59,73 @@ class Home extends React.Component {
     		removeCity
     	} = this.props;
 
-    	var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
-		db.transaction(function (tx) {
-    		tx.executeSql('DELETE FROM LOGS  WHERE id=?', [id]);
-		});
-
     	removeCity(id);
     }
 
-    addCity(e) {
+    asyncAddCity(e) {
   		const {
-				addCity,
+				asyncAddCity,
 				cities
 			} = this.props;
 
 		let city = cities.addCity;
-
-		var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
-		db.transaction(function (tx) {
-   			tx.executeSql('CREATE TABLE IF NOT EXISTS LOGS (id integer primary key autoincrement, log)');
-   			tx.executeSql('INSERT INTO LOGS (log) VALUES (?)', [city]);
-   			tx.executeSql('SELECT * FROM LOGS', [], function (tx, result) {
-				let index = result.rows.length;
-				let id = result.rows.item(index-1).id;
-				addCity(city, id);
-			})
-   		}, null);
-
+   		asyncAddCity(city);
 	}
+
+	 handleClick(eventKey) {
+
+        this.setState({
+          currentPage: eventKey
+        });
+      }
 
     render() {
     	const {cities} = this.props;
     	const addCity = cities.addCity;
+    	const citiesData = cities.data;
+    	const {currentPage} = this.state;
+    	const citiesPerPage = 2;
+
+    	const indexOfLastCity = currentPage * citiesPerPage;
+        const indexOfFirstCity = indexOfLastCity - citiesPerPage;
+        const currentCities = citiesData.slice(indexOfFirstCity, indexOfLastCity);
+
+        const renderCities = currentCities.map((city, index) => {
+          return <li key={index}>{city.data}</li>;
+        });
+
+        const pageNumbers = [];
+        for (let i = 1; i <= Math.ceil(citiesData.length / citiesPerPage); i++) {
+          pageNumbers.push(i);
+        }
+
+        const renderPageNumbers = 
+        <Pagination
+	        prev
+	        next
+	        first
+	        last
+	        ellipsis
+	        boundaryLinks
+          	bsSize="medium"
+          	items={Math.ceil(citiesData.length / citiesPerPage)}
+          	activePage={this.state.currentPage}
+          	onSelect={this.handleClick}
+        />
 
         return (
-        	<div> {cities.data.map((city, id) => (
+        	<div> {currentCities.map((city, id) => (
         		<div key={id}>
-            		{city.city}
+            		<li key={id}>{city.city}</li>
             		<button onClick={() => this.deleteCity(city.id)} data-city={city.city}>Удалить город</button>
             		<input type="text" value={city.city} onChange={(e) => this.handleCityChange(city.id,e.target.value)}></input>
             	</div>)
             	)}
+	        	<ul>
+	              	{renderPageNumbers}
+	            </ul>
           		<input type="text" value={addCity} onChange={this.handleAddCityChange}></input>
-          		<button onClick={this.addCity}>Добавить город</button>
+          		<button onClick={this.asyncAddCity}>Добавить город</button>
           </div>)
 	}
 }
@@ -130,7 +138,7 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
 	return bindActionCreators({
-		addCity,
+		asyncAddCity,
 		removeCity,
 		changeCity,
 		addInputHelper,
@@ -142,7 +150,7 @@ function mergeProps(stateProps, dispatchProps, ownProps) {
 	return {
 		...stateProps,
 		...dispatchProps,
-		...ownProps
+		...ownProps,
 	}
 }
 
