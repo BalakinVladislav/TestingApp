@@ -1,7 +1,17 @@
+import "babel-polyfill";
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { store } from "../store.js";
+import { router } from "../router.js";
+import Home from "../components/Home.js";
+
+
+
+var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
+
 export const asyncAddCity = (city) => dispatch => {
-		var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
 		db.transaction(function (tx) {
-   			tx.executeSql('CREATE TABLE IF NOT EXISTS LOGS (id integer primary key autoincrement, log)');
    			tx.executeSql('INSERT INTO LOGS (log) VALUES (?)', [city]);
    			tx.executeSql('SELECT * FROM LOGS', [], function (tx, result) {
 				let index = result.rows.length;
@@ -16,7 +26,6 @@ export const asyncAddCity = (city) => dispatch => {
 }
 
 export const removeCity = (id) => dispatch => {
-	var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
 	db.transaction(function (tx) {
    		tx.executeSql('DELETE FROM LOGS  WHERE id=?', [id]);
     		dispatch({
@@ -27,7 +36,6 @@ export const removeCity = (id) => dispatch => {
 }
 
 export const changeCity = (id, city) => dispatch => {
-	var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
 	db.transaction(function (tx) {
    		tx.executeSql('UPDATE LOGS SET log=? WHERE id=?', [city, id]);
     		dispatch({
@@ -45,24 +53,9 @@ export const addInputHelper = (newCity) => {
 	}
 }
 
-export const restoreFromWebSql = () => dispatch => {
-	var db = openDatabase("Cities2", "3.7.13", "A list of cities", 200000);
-	let startingData = [];
-	db.transaction(function (tx) {
-		tx.executeSql('CREATE TABLE IF NOT EXISTS LOGS (id integer primary key autoincrement, log)');
-		tx.executeSql('SELECT * FROM LOGS', [], function (tx, result) {
-			for (var i = 0; i < result.rows.length; i++) {
-				let el = {
-					id: result.rows.item(i).id,
-					city: result.rows.item(i).log
-				};
-				startingData.push(el);
-			}
-			dispatch({
-				type: 'CITIES_RESTORE_FROM_WEB_SQL',
-				startingData
-			});
-
-			})
-	}, null);
+export const restoreFromWebSql = startingData => dispatch => {
+	dispatch({
+		type: 'CITIES_RESTORE_FROM_WEB_SQL',
+		startingData
+	});
 }

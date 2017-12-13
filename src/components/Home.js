@@ -28,11 +28,12 @@ class Home extends React.Component {
 	}
 
 	componentWillMount() {
+    const {startingData} = this.props;
 		const {
 			restoreFromWebSql
 		} = this.props
 
-		restoreFromWebSql();
+		restoreFromWebSql(startingData);
 
 	}
 
